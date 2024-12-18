@@ -1,0 +1,44 @@
+Important commands:
+    -- start the server
+    sudo systemctl start postgresql 
+
+    -- stop the server
+    sudo systemctl stop postgresql 
+
+    -- status of server
+    sudo systemctl status postgresql
+
+    -- connect to plpgsl console
+    sudo -u postgres psql
+    \c database  
+
+
+
+
+Authentication:
+    Login: email, password
+    Register: email, name, password, DOB, address
+    Secure encryption for password
+
+
+DataBase  
+    User: email, password, dob, address, CardID
+    BankCard: CardID references User (CardID), EXP date, name, CVV
+    Transaction: source CardID, target CardID, transaction type, amount?
+
+Banking Actions:
+    Transfer: Amount, Target CardID
+    Deposit: Amount, Target CardID
+    Withdraw money: Amount, Source CardID
+    Recent Transactions: List of transactions 
+
+
+Frameworks:
+    Flask - smaller but more flexible
+    Postgres - used as a DB to store users 
+
+Scripts:
+    init_py - initialising all the packages
+    routes.py - flask routes
+    models.py - containing the schema of the DB 
+    sql script? - have init load it up which should create tables - might have to us py for this
