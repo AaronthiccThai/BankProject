@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCAMBanking</title>
+</head>
+<body>
+    <div class="container">
+        <h2 id="form-title">Login</h2>
+        <form id="auth-form" method="POST" action="http://localhost:5000/auth/login">
+            <input type="text" id="username" name="username" placeholder="Username" required>
+            <input type="password" id="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <div class="toggle" onclick="toggleForm()">Don't have an account? Register</div>
+    </div>
+
+    <script>
+        let isLogin = true;
+
+        // Toggle between login and register
+        function toggleForm() {
+            isLogin = !isLogin;
+            const formTitle = document.getElementById("form-title");
+            const formButton = document.querySelector("form button");
+            const toggleText = document.querySelector(".toggle");
+
+            if (isLogin) {
+                formTitle.textContent = "Login";
+                formButton.textContent = "Login";
+                toggleText.textContent = "Don't have an account? Register";
+                document.getElementById("auth-form").action = "http://localhost:5000/auth/login";  // Set action for login
+
+            } else {
+                formTitle.textContent = "Register";
+                formButton.textContent = "Register";
+                toggleText.textContent = "Already have an account? Login";
+                document.getElementById("auth-form").action = "http://localhost:5000/auth/register";  // Set action for register
+            }
+        }
+    </script>
+</body>
+</html>

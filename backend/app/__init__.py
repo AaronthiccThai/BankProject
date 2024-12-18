@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 import psycopg2
 from psycopg2 import sql
-from .routes import main_routes 
+from .routes import auth_routes 
 
 def create_app() -> Flask:    
     app = Flask(__name__)
@@ -22,5 +22,5 @@ def create_app() -> Flask:
     # except ConnectionError as e:
     #     print(f"Database error connection: {e}")    
         
-    app.register_blueprint(main_routes)  # Register the blueprint
+    app.register_blueprint(auth_routes)  # Register the blueprint
     return app
