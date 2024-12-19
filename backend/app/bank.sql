@@ -1,9 +1,14 @@
+-- We need to connect to tmp directory first
 CREATE DATABASE bankdb;
 \c bankdb
 
 CREATE USER admin WITH PASSWORD 'admin';
 GRANT ALL PRIVILEGES ON DATABASE bankdb TO admin;
 GRANT ALL PRIVILEGES ON SCHEMA public TO admin;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE users TO admin;
+-- Might just execute last one for all nto sure
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO admin;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO admin;
 
 CREATE TABLE Users (
     id SERIAL PRIMARY KEY,
@@ -31,6 +36,7 @@ CREATE TABLE Transactions (
     target_CardID INTEGER NOT NULL,
     transaction_type VARCHAR(50) NOT NULL CHECK (transaction_type IN ('Transfer', 'Deposit', 'Withdrawal')),
     amount DECIMAL(10,2) NOT NULL CHECK (amount > 0),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
     FOREIGN KEY (source_CardID) REFERENCES BankCard(CardID),
     FOREIGN KEY (target_CardID) REFERENCES BankCard(CardID)
 );

@@ -1,14 +1,15 @@
 from flask import Blueprint, request, jsonify
-
+import psycopg2
+from psycopg2 import sql
 """
 Endpoints:
     Auth - auth_routes:
         Register
         Login
     Card - bank_routes:
-        Add bank card
+        Add/Create bank card
         View bank card
-    Transactions - bank_routes:
+    Transactions - transaction_routes:
         Transfer money
         Withdraw money
         Deposit money
@@ -16,34 +17,65 @@ Endpoints:
 
 """
 
-from flask import Blueprint, jsonify
-auth_routes = Blueprint('auth', __name__)
+# Example: Your database connection details (you'll want to put this in your config)
+DB_HOST = 'localhost'
+DB_USER = 'admin'  # Adjust as needed
+DB_PASSWORD = 'admin'
+DB_NAME = 'bankdb'
 
-temp = {}
+# Function to connect to PostgreSQL
+def get_db_connection():
+    conn = psycopg2.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        dbname=DB_NAME
+    )
+    return conn
+    
+auth_routes = Blueprint('auth', __name__)
+bank_routes = Blueprint('bank', __name__)
+transaction_routes = Blueprint('transaction', __name__)
 @auth_routes.route('/auth/register', methods=['POST'])
 def register():
-    username = request.form.get('username')
+    email = request.form.get('email')
+    fullname = request.form.get('name')
     password = request.form.get('password')
-    print(password, username)
-    if not username or not password:
-        return jsonify({"status": "error", "message": "Username and password are required!"}), 400
-
-    if username in temp:
+    dob = request.form.get('dob')
+    address = request.form.get('address')
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()    
+    cursor.execute("SELECT * FROM users WHERE email = %s;", (email,))
+    existing_user = cursor.fetchone()
+    
+    if existing_user:
         return jsonify({"status": "error", "message": "User already exists!"}), 400    
     
-    temp[username] = password
+    cursor.execute("INSERT INTO users (email, name, password, dob, address) VALUES (%s, %s, %s, %s, %s)", 
+                   (email, fullname, password, dob, address))
+    conn.commit()
+    cursor.close()
+    conn.close()
     return jsonify({"status": "success", "message": "User registered successfully!"})    
 
 @auth_routes.route('/auth/login', methods=['POST'])
 def login():
-    username = request.form.get('username')
+    email = request.form.get('email')
     password = request.form.get('password')
-    if not username or not password:
-        return jsonify({"status": "error", "message": "Username and password are required!"}), 400
     
-    if username not in temp:
-        return jsonify({"status": "error", "message": "User is not registered in database!"}), 400
+    conn = get_db_connection()
+    cursor = conn.cursor()    
+    cursor.execute("SELECT * FROM users WHERE username = %s;", (email,))
+    existing_user = cursor.fetchone()
     
-    if password != temp[username]:
+
+    if existing_user is None:
+        return jsonify({"status": "error", "message": "Invalid User"}), 400
+    stored_pw = existing_user[3]
+    if password != stored_pw:
         return jsonify({"status": "error", "message": "Password is incorrect"}), 400
+
+    cursor.close()
+    conn.close()
     return jsonify({"status": "success", "message": "User logged in successfully!"})    
