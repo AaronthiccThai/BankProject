@@ -4,3 +4,10 @@ Button:
     Transfer
 
 Transaction History - Table, fetch from database and then we can display it on Table
+    Date | Type | Accoutn no | Balance
+    
+Table : Accounts Overview
+    Show all cards on bank home page - after logging in with funds
+    Account info/id | Balance |
+
+
