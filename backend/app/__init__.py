@@ -2,9 +2,11 @@ from flask import Flask, jsonify
 import psycopg2
 from psycopg2 import sql
 from .routes import auth_routes 
+from flask_cors import CORS
 
 def create_app() -> Flask:    
     app = Flask(__name__)
+    CORS(app)
     app.config
     
     app.config['DATABASE_HOST'] = 'localhost'  

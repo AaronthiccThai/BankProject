@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import psycopg2
-from psycopg2 import sql
+from flask_cors import CORS
+
 """
 Endpoints:
     Auth - auth_routes:
@@ -36,14 +37,19 @@ def get_db_connection():
 auth_routes = Blueprint('auth', __name__)
 bank_routes = Blueprint('bank', __name__)
 transaction_routes = Blueprint('transaction', __name__)
+CORS(auth_routes)
+CORS(bank_routes)
+CORS(transaction_routes)
+
 @auth_routes.route('/auth/register', methods=['POST'])
 def register():
-    email = request.form.get('email')
-    fullname = request.form.get('name')
-    password = request.form.get('password')
-    dob = request.form.get('dob')
-    address = request.form.get('address')
-        
+    data = request.get_json()    
+    email = data.get('email')
+    fullname = data.get('name')
+    password = data.get('password')
+    dob = data.get('dob')
+    address = data.get('address')
+
     conn = get_db_connection()
     cursor = conn.cursor()    
     cursor.execute("SELECT * FROM users WHERE email = %s;", (email,))
@@ -59,14 +65,15 @@ def register():
     conn.close()
     return jsonify({"status": "success", "message": "User registered successfully!"})    
 
-@auth_routes.route('/auth/login', methods=['POST'])
+@auth_routes.route('/auth/login', methods=['POST']) 
 def login():
-    email = request.form.get('email')
-    password = request.form.get('password')
+    data = request.get_json()    
+    email = data.get('email')
+    password = data.get('password')
     
     conn = get_db_connection()
     cursor = conn.cursor()    
-    cursor.execute("SELECT * FROM users WHERE username = %s;", (email,))
+    cursor.execute("SELECT * FROM users WHERE email = %s;", (email,))
     existing_user = cursor.fetchone()
     
 
