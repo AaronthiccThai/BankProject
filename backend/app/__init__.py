@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 import psycopg2
 from psycopg2 import sql
-from .routes import auth_routes 
+from .routes import auth_routes, bank_routes, transaction_routes
 from flask_cors import CORS
 
 def create_app() -> Flask:    
@@ -25,4 +25,5 @@ def create_app() -> Flask:
         print(f"Database error connection: {e}")    
         
     app.register_blueprint(auth_routes)  # Register the blueprint
+    app.register_blueprint(bank_routes)
     return app

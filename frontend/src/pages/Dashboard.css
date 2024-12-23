@@ -1,0 +1,73 @@
+/* Reset some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+  
+  /* Navbar Styling */
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    background-color: #333;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+  
+li {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 15px;
+}
+  
+a, button {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin: 0 10px;
+}
+  
+a:hover, button:hover {
+    background-color: #0056b3;
+}
+  
+button {
+    background-color: #28a745;
+}
+  
+button:hover {
+    background-color: #218838; 
+}
+  
+/* Add padding to the body content to prevent overlap with the fixed navbar */
+body {
+    padding-top: 60px; /* Adjust this value based on the navbar height */
+}
+  
+/* Make the page container content fill the screen height */
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px;
+}
+  
+h1 {
+    margin-top: 80px; 
+}
+  
+
+

@@ -17,10 +17,11 @@ const AuthForm = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Frontend and Backend aren't running on same port
     const url = isLogin
       ? "http://localhost:5000/auth/login"
       : "http://localhost:5000/auth/register";
@@ -35,8 +36,10 @@ const AuthForm = () => {
       const data = await response.json();
       if (response.ok) {
         alert(data.message);
+        // This is security problem but who cares :D 
+        localStorage.setItem("token", data.token)
         navigate("/dashboard")
-        if (!isLogin) setIsLogin(true); // Switch to login after successful registration
+        // if (!isLogin) setIsLogin(true);
       } else {
         alert(data.message);
       }

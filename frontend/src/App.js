@@ -3,6 +3,8 @@ import AuthForm from "./pages/Auth.js";
 import Dashboard from "./pages/Dashboard.js";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './pages/Auth.css'; 
+import './pages/Dashboard.css'
+import './pages/DashboardForm.css'
 function App() {
   return (
     <Router>
