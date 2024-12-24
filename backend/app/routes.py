@@ -158,7 +158,24 @@ def add_card():
     
     
 @bank_routes.route('/bank/getcard', methods=['GET'])
-def getCards():
+def get_cards():
+    
+    decoded_token, error = verify_token()
+    if not decoded_token:
+        return jsonify({"status": "error", "message": "Token is missing!"}), 403
+    
+    user_id = decoded_token.get("user_id")
+    if not user_id:
+        return jsonify({"status": "error", "message": "Invalid token payload"}), 401       
+        
     conn = get_db_connection()
     cursor = conn.cursor()        
     
+    cursor.execute("select b.CardID, b.balance from BankCard b where b.ownerID = %s", (user_id,))
+    result = cursor.fetchall()
+    print(result)
+    cards = [{"card_id": row[0], "balance": row[1]} for row in result]
+    cursor.close()
+    conn.close()
+    return jsonify({"status" : "success", "cards": cards}), 200
+

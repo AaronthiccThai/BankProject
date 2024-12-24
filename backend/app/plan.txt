@@ -1,4 +1,6 @@
 Important commands:
+    cd /
+    cd tmp
     -- start the server
     sudo systemctl start postgresql 
 

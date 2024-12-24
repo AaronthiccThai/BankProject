@@ -26,4 +26,5 @@ def create_app() -> Flask:
         
     app.register_blueprint(auth_routes)  # Register the blueprint
     app.register_blueprint(bank_routes)
+    app.register_blueprint(transaction_routes)
     return app

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { data, Form } from "react-router-dom";
 
           
@@ -36,7 +36,8 @@ const Dashboard = () => {
       if (response.ok) {
         alert(data.message)
         setCardDetails({ cardNumber: "", expDate: "", cvv: "" });
-        setCardShowForm(false);           
+        setCardShowForm(false); 
+        fetchCards()          
       } else {
         alert(data.message)
       }
@@ -45,6 +46,35 @@ const Dashboard = () => {
     }
  
   }
+
+  const [showAllCards, setAllCards] = useState(true);
+  const [cards, setCards] = useState([])
+
+  const fetchCards = async () => {
+    const url = "http://localhost:5000/bank/getcard";
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setCards(data.cards);
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching cards:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCards();
+  }, []);
 
   return (
       <div>
@@ -56,6 +86,25 @@ const Dashboard = () => {
             </li>
 
         </ul>
+        {showAllCards && (
+          <div class="table-container"> 
+            <h2>Your cards</h2>
+              <thead>
+                <tr>
+                  <th> Card number </th>
+                  <th> Balance </th>
+                </tr>
+              </thead>
+              <tbody>
+                {cards.map((card, index) => (
+                  <tr key={index}>
+                    <td>{card.card_id}</td>
+                    <td>{card.balance}</td>
+                  </tr>
+                ))}
+              </tbody>
+          </div> 
+        )}
         {showCardForm && (
           <form onSubmit={handleFormSubmit} class="card-form"> 
             <h2>Add Card</h2>

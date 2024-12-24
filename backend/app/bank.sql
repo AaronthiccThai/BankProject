@@ -27,6 +27,7 @@ CREATE TABLE BankCard (
     expdate VARCHAR(7) NOT NULL CHECK (expdate ~ '^\d{4}-(0[1-9]|1[0-2])$'),
     cvv CHAR(3) NOT NULL CHECK (cvv ~ '^\d{3}$'),
     ownerID INTEGER NOT NULL,
+    balance DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     FOREIGN KEY (ownerID) REFERENCES Users(id)
 );
 
