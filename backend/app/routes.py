@@ -20,13 +20,11 @@ Endpoints:
 
 """
 
-# Example: Your database connection details (you'll want to put this in your config)
 DB_HOST = 'localhost'
-DB_USER = 'admin'  # Adjust as needed
+DB_USER = 'admin' 
 DB_PASSWORD = 'admin'
 DB_NAME = 'bankdb'
 
-# Function to connect to PostgreSQL
 def get_db_connection():
     conn = psycopg2.connect(
         host=DB_HOST,
