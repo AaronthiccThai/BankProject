@@ -56,6 +56,15 @@ def verify_token():
     except jwt.InvalidTokenError:
         return None, "Token is invalid"        
     
+def get_user_id():
+    decoded_token, error = verify_token()
+    if not decoded_token:
+        return jsonify({"status": "error", "message": "Token is missing!"}), 403
+    
+    user_id = decoded_token.get("user_id")
+    if not user_id:
+        return jsonify({"status": "error", "message": "Invalid token payload"}), 401
+    return user_id          
     
 @auth_routes.route('/auth/register', methods=['POST'])
 def register():
@@ -121,15 +130,8 @@ def login():
 
 
 @bank_routes.route('/bank/addcard', methods=['POST'])
-def add_card():
-    decoded_token, error = verify_token()
-    if not decoded_token:
-        return jsonify({"status": "error", "message": "Token is missing!"}), 403
-    
-    user_id = decoded_token.get("user_id")
-    if not user_id:
-        return jsonify({"status": "error", "message": "Invalid token payload"}), 401            
-
+def add_card():        
+    user_id = get_user_id()
     conn = get_db_connection()
     cursor = conn.cursor()   
     cursor.execute("SELECT name from users where id = %s", (user_id,))        
@@ -157,15 +159,7 @@ def add_card():
     
 @bank_routes.route('/bank/getcard', methods=['GET'])
 def get_cards():
-    
-    decoded_token, error = verify_token()
-    if not decoded_token:
-        return jsonify({"status": "error", "message": "Token is missing!"}), 403
-    
-    user_id = decoded_token.get("user_id")
-    if not user_id:
-        return jsonify({"status": "error", "message": "Invalid token payload"}), 401       
-        
+    user_id = get_user_id()
     conn = get_db_connection()
     cursor = conn.cursor()        
     
@@ -177,3 +171,90 @@ def get_cards():
     conn.close()
     return jsonify({"status" : "success", "cards": cards}), 200
 
+@transaction_routes.route('/transaction/withdraw', methods=['POST'])
+def withdraw():
+    user_id = get_user_id()
+    data =  request.get_json()
+    amount = data.get("amount")
+    card_id = data.get("cardNumber")
+    if not amount or not card_id:
+        return jsonify({"status": "error", "message": "No supplied amount or cardID"}), 400
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT balance from BankCard where ownerID = %s and cardID = %s", (user_id, card_id))
+    user_bal = cursor.fetchone()
+    user_bal = user_bal[0]
+    if user_bal < amount:
+        return jsonify({"status": "error", "message": "Not enough funds"}), 400
+    new_balance = user_bal - amount
+    
+    cursor.execute("UPDATE BankCard SET balance = %s WHERE ownerID = %s AND cardID = %s", (new_balance, user_id, card_id))
+    cursor.execute(""" INSERT INTO Transactions (source_CardID, target_CardID, transaction_type, amount)
+                   VALUES (%s, NULL, 'Withdrawal', %s)""", (card_id, amount))    
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({"status": "success", "message": "Withdrawal successful"}), 200
+    
+@transaction_routes.route('/transaction/deposit', methods=['POST'])
+def deposit():
+    user_id = get_user_id()
+    data = request.get_json()    
+    amount = data.get('amount')
+    target_card_id = data.get('cardNumber')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT balance from BankCard where ownerID = %s and cardID = %s", (user_id, target_card_id))
+    user_bal = cursor.fetchone()
+    if not user_bal:
+        return jsonify({"status": "error", "message": "Bank card does not exist"}), 400
+    user_bal = user_bal[0]    
+    new_balance = user_bal + amount
+    
+    cursor.execute("UPDATE BankCard SET balance = %s WHERE ownerID = %s AND cardID = %s", (new_balance, user_id, target_card_id))
+    
+    cursor.execute(""" INSERT INTO Transactions (source_CardID, target_CardID, transaction_type, amount)
+                   VALUES (NULL, %s, 'Deposit', %s)""", (target_card_id, amount))        
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({"status": "success", "message": "Deposit successful"}), 200
+    
+@transaction_routes.route('/transaction/transfer', methods=['POST'])
+def transfer():
+    user_id = get_user_id()
+    data = request.get_json()
+    amount = data.get('amount')
+    source_card_id = data.get('sourceCardID')
+    target_card_id = data.get('targetCardID')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT balance from BankCard where ownerID = %s and CardID = %s", (user_id, source_card_id))
+    source_bal = cursor.fetchone()
+    if not source_bal:
+        return jsonify({"status": "error", "message": "Bank card does not exist"}), 400
+    source_bal = source_bal[0]    
+    
+    if source_bal < amount:
+        return jsonify({"status": "error", "message": "Insufficient funds"}), 400
+    
+    new_source_bal = source_bal - amount
+    
+    cursor.execute("SELECT balance from BankCard where ownerID = %s and cardID = %s", (user_id, target_card_id))
+    target_bal = cursor.fetchone()
+    if not target_bal:
+        return jsonify({"status": "error", "message": "Bank card does not exist"}), 400
+    target_bal = target_bal[0]
+    
+    new_target_bal = target_bal + amount
+    
+    cursor.execute("UPDATE BankCard SET balance = %s WHERE ownerID = %s AND cardID = %s", (new_source_bal, user_id, source_card_id))
+    cursor.execute("UPDATE BankCard SET balance = %s WHERE ownerID = %s AND cardID = %s", (new_target_bal, user_id, target_card_id))
+    
+    cursor.execute(""" INSERT INTO Transactions (source_CardID, target_CardID, transaction_type, amount)
+                   VALUES (%s, %s, 'Withdrawal', %s)""", (source_card_id, target_card_id, amount))        
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({"status": "success", "message": "Successfully transferred funds"}), 200
