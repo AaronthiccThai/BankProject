@@ -4,6 +4,8 @@ from flask_cors import CORS
 import jwt
 from datetime import datetime, timedelta, timezone
 import random
+from decimal import Decimal
+
 """
 Endpoints:
     Auth - auth_routes:
@@ -59,12 +61,14 @@ def verify_token():
 def get_user_id():
     decoded_token, error = verify_token()
     if not decoded_token:
-        return jsonify({"status": "error", "message": "Token is missing!"}), 403
+        raise ValueError("Token is missing or invalid")
     
     user_id = decoded_token.get("user_id")
     if not user_id:
-        return jsonify({"status": "error", "message": "Invalid token payload"}), 401
-    return user_id          
+        raise ValueError("Invalid token payload")
+    
+    return user_id
+    
     
 @auth_routes.route('/auth/register', methods=['POST'])
 def register():
@@ -90,8 +94,8 @@ def register():
     new_user = cursor.fetchone()
         
     token = jwt.encode({
-        'user_id': new_user[0],  # Assuming user[0] is the user ID
-        'exp':  datetime.now(timezone.utc) + timedelta(hours=1)  # Token expiration time (1 hour)
+        'user_id': new_user[0], 
+        'exp':  datetime.now(timezone.utc) + timedelta(hours=5)
     }, SECRET_KEY, algorithm='HS256')    
     
 
@@ -123,7 +127,7 @@ def login():
     
     token = jwt.encode({
         'user_id': existing_user[0],  # Assuming user[0] is the user ID
-        'exp':  datetime.now(timezone.utc) + timedelta(hours=1)  # Token expiration time (1 hour)
+        'exp':  datetime.now(timezone.utc) + timedelta(hours=5)  # Token expiration time (1 hour)
     }, SECRET_KEY, algorithm='HS256')    
         
     return jsonify({"status": "success", "message": "User logged in successfully!", "token": token})    
@@ -175,8 +179,8 @@ def get_cards():
 def withdraw():
     user_id = get_user_id()
     data =  request.get_json()
-    amount = data.get("amount")
-    card_id = data.get("cardNumber")
+    amount = Decimal(data.get("amount"))
+    card_id = data.get("targetCardID")
     if not amount or not card_id:
         return jsonify({"status": "error", "message": "No supplied amount or cardID"}), 400
     conn = get_db_connection()
@@ -189,7 +193,7 @@ def withdraw():
     new_balance = user_bal - amount
     
     cursor.execute("UPDATE BankCard SET balance = %s WHERE ownerID = %s AND cardID = %s", (new_balance, user_id, card_id))
-    cursor.execute(""" INSERT INTO Transactions (source_CardID, target_CardID, transaction_type, amount)
+    cursor.execute("""INSERT INTO Transactions (source_CardID, target_CardID, transaction_type, amount)
                    VALUES (%s, NULL, 'Withdrawal', %s)""", (card_id, amount))    
     conn.commit()
     cursor.close()
@@ -200,8 +204,9 @@ def withdraw():
 def deposit():
     user_id = get_user_id()
     data = request.get_json()    
-    amount = data.get('amount')
-    target_card_id = data.get('cardNumber')
+    amount = Decimal(data.get('amount'))
+    target_card_id = data.get('targetCardID')
+    print(amount, target_card_id)
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT balance from BankCard where ownerID = %s and cardID = %s", (user_id, target_card_id))
@@ -213,7 +218,7 @@ def deposit():
     
     cursor.execute("UPDATE BankCard SET balance = %s WHERE ownerID = %s AND cardID = %s", (new_balance, user_id, target_card_id))
     
-    cursor.execute(""" INSERT INTO Transactions (source_CardID, target_CardID, transaction_type, amount)
+    cursor.execute("""INSERT INTO Transactions (source_CardID, target_CardID, transaction_type, amount)
                    VALUES (NULL, %s, 'Deposit', %s)""", (target_card_id, amount))        
     conn.commit()
     cursor.close()
@@ -224,10 +229,10 @@ def deposit():
 def transfer():
     user_id = get_user_id()
     data = request.get_json()
-    amount = data.get('amount')
-    source_card_id = data.get('sourceCardID')
-    target_card_id = data.get('targetCardID')
-    
+    amount = Decimal(data.get('amount'))
+    target_card_id = data.get('transferCard')
+    source_card_id = data.get('targetCardID')
+    print(f"source card id: {source_card_id}, target card id: {target_card_id}")
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT balance from BankCard where ownerID = %s and CardID = %s", (user_id, source_card_id))
@@ -252,7 +257,7 @@ def transfer():
     cursor.execute("UPDATE BankCard SET balance = %s WHERE ownerID = %s AND cardID = %s", (new_source_bal, user_id, source_card_id))
     cursor.execute("UPDATE BankCard SET balance = %s WHERE ownerID = %s AND cardID = %s", (new_target_bal, user_id, target_card_id))
     
-    cursor.execute(""" INSERT INTO Transactions (source_CardID, target_CardID, transaction_type, amount)
+    cursor.execute("""INSERT INTO Transactions (source_CardID, target_CardID, transaction_type, amount)
                    VALUES (%s, %s, 'Withdrawal', %s)""", (source_card_id, target_card_id, amount))        
     conn.commit()
     cursor.close()

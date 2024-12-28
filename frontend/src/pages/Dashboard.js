@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { data, Form } from "react-router-dom";
-
+import Header from "./Header.js";
           
 const Dashboard = () => {
   // For add card form
   const [showCardForm, setCardShowForm] = useState(false);
-
   const [cardDetails, setCardDetails] = useState({
     cardNumber: "",
     expDate: "",
@@ -46,7 +45,7 @@ const Dashboard = () => {
     }
  
   }
-
+  // For displaying all the users cards - acc number and bal
   const [showAllCards, setAllCards] = useState(true);
   const [cards, setCards] = useState([])
 
@@ -76,35 +75,103 @@ const Dashboard = () => {
     fetchCards();
   }, []);
 
+  // For displaying all actions for the bank card - withdraw, deposit, transfer
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [showCardActions, setShowCardActions] = useState(false);
+  const [selectedAction, setSelectedAction] = useState('');
+
+  const handleShowActions = (card) => {
+    setSelectedCard(card);
+    setShowCardActions(true);
+  };
+  const handleActionSubmit = async(e, targetCardID) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const action = formData.get("action");
+    const amount = formData.get("amount");
+    const url = `http://localhost:5000/transaction/${action}`;
+    const payload = { targetCardID, amount };
+
+    if (action === "transfer") {
+      const transferCard = formData.get("transferCard");
+      payload.transferCard = transferCard;
+    }
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,          
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        fetchCards()
+        alert(data.message)
+        setShowCardActions(false);
+      } else {
+        alert(data.message);
+        console.log(data.message);
+      }
+    } catch(error) {
+      console.error("Error: ", error)
+    }
+  };
   return (
       <div>
-        <ul>
-          <li>
-            <a href="#">Home</a>
-            <a href="#">Transactions</a>
-            <button onClick={handleToggleForm}>Add Card</button>
-            </li>
-
-        </ul>
+        <Header onToggleForm={handleToggleForm}/> 
         {showAllCards && (
           <div class="table-container"> 
             <h2>Your cards</h2>
-              <thead>
-                <tr>
-                  <th> Card number </th>
-                  <th> Balance </th>
-                </tr>
-              </thead>
-              <tbody>
-                {cards.map((card, index) => (
-                  <tr key={index}>
-                    <td>{card.card_id}</td>
-                    <td>{card.balance}</td>
+              <table> 
+                <thead>
+                  <tr>
+                    <th> Card number </th>
+                    <th> Balance </th>
                   </tr>
-                ))}
-              </tbody>
+                </thead>
+                <tbody>
+                  {cards.map((card, index) => (
+                    <tr key={index}>
+                      <td>{card.card_id}</td>
+                      <td>{card.balance}</td>
+                      <td>
+                        <button onClick={() => handleShowActions(card)}>Actions</button>
+                      </td>
+
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
           </div> 
         )}
+        {showCardActions && selectedCard && (
+          <div className="actions-container">
+            <h2>Actions for Card: {selectedCard.card_id}</h2>
+            <form onSubmit={(e) => handleActionSubmit(e, selectedCard.card_id)}>
+              <label>
+                Action:
+                <select name="action" onChange={(e) => setSelectedAction(e.target.value)} required>
+                  <option value="withdraw">Withdraw</option>
+                  <option value="deposit">Deposit</option>
+                  <option value="transfer">Transfer</option>
+                </select>
+              </label>
+              <label>
+                Amount:
+                <input type="text" name="amount" pattern="\d+(\.\d{1,2})?" title="Please enter a valid decimal amount (e.g., 123.45)" required />
+              </label>
+              <button type="submit">Submit</button>
+              {selectedAction === "transfer" && (
+                <label> Target Card Number
+                  <input type="text" name="transferCard" title="Please enter target card number" required />  
+                </label>
+              )}
+            </form>
+          </div>
+        )}
+
         {showCardForm && (
           <form onSubmit={handleFormSubmit} class="card-form"> 
             <h2>Add Card</h2>
