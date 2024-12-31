@@ -125,8 +125,8 @@ def login():
     conn.close()
     
     token = jwt.encode({
-        'user_id': existing_user[0],  # Assuming user[0] is the user ID
-        'exp':  datetime.now(timezone.utc) + timedelta(hours=5)  # Token expiration time (1 hour)
+        'user_id': existing_user[0],
+        'exp':  datetime.now(timezone.utc) + timedelta(hours=5)
     }, SECRET_KEY, algorithm='HS256')    
         
     return jsonify({"status": "success", "message": "User logged in successfully!", "token": token})    
