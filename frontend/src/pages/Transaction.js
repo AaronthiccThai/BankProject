@@ -2,7 +2,6 @@ import React, { useEffect, useState} from "react";
 
 const Transaction = () => {
 
-	const [showTransaction, setShowTransaction] = useState(true);
 	const [transactions, setTransactions] = useState([]);
 	const fetchTransaction = async() => {
 		const url = "http://localhost:5000/transaction/get_transactions"	

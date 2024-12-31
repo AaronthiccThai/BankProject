@@ -114,7 +114,6 @@ def login():
     cursor = conn.cursor()    
     cursor.execute("SELECT * FROM users WHERE email = %s;", (email,))
     existing_user = cursor.fetchone()
-    
 
     if existing_user is None:
         return jsonify({"status": "error", "message": "Invalid User"}), 400
@@ -131,6 +130,7 @@ def login():
     }, SECRET_KEY, algorithm='HS256')    
         
     return jsonify({"status": "success", "message": "User logged in successfully!", "token": token})    
+
 
 
 @bank_routes.route('/bank/addcard', methods=['POST'])

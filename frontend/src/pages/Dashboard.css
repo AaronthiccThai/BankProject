@@ -84,6 +84,20 @@ h1 {
   background-color: #c82333;
 }
 
+.logoutButton {
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin: 0 10px;
+}
+.logoutButton:hover {
+  background-color: grey;
+}
+
 /* Styling for the table of all cards */
 .table-container {
     margin-top: 30px;
@@ -127,3 +141,4 @@ h1 {
   tr:nth-child(even) td {
     background-color: #f1f1f1;
   }
+
