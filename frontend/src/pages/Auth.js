@@ -21,7 +21,6 @@ const AuthForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Frontend and Backend aren't running on same port
     const url = isLogin
       ? "http://localhost:5000/auth/login"
       : "http://localhost:5000/auth/register";
@@ -36,10 +35,8 @@ const AuthForm = () => {
       const data = await response.json();
       if (response.ok) {
         alert(data.message);
-        // This is security problem but who cares :D 
         localStorage.setItem("token", data.token)
         navigate("/dashboard")
-        // if (!isLogin) setIsLogin(true);
       } else {
         alert(data.message);
       }
