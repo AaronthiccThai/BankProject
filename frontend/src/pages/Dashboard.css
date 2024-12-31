@@ -26,8 +26,9 @@ li {
     align-items: center;
     margin: 0 15px;
 }
-  
-a, button {
+
+/* Styling for text in navbar placeholder */
+a {
     color: white;
     text-decoration: none;
     padding: 10px 20px;
@@ -38,18 +39,10 @@ a, button {
     margin: 0 10px;
 }
   
-a:hover, button:hover {
+a:hover {
     background-color: #0056b3;
 }
-  
-button {
-    background-color: #28a745;
-}
-  
-button:hover {
-    background-color: #218838; 
-}
-  
+
 body {
     padding-top: 60px; 
 }
@@ -57,14 +50,47 @@ body {
 h1 {
     margin-top: 80px; 
 }
-  
+/* Styling for add a card */
+.addButton {
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin: 0 10px;
+  background-color: #28a745; 
+}
+.addButton:hover{
+  background-color: #218838; 
+}
+
+
+/* Styling for removing a card */
+.removeButton {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin: 0 10px;
+    background-color: #dc3545; 
+
+}
+.removeButton:hover {
+  background-color: #c82333;
+}
+
 /* Styling for the table of all cards */
 .table-container {
     margin-top: 30px;
     padding: 20px;
     max-width: 1000px;
     margin-left: 20px;
-    margin-right: 0;
+    margin-right: 0; 
     text-align: left;
   }
   

@@ -38,6 +38,6 @@ CREATE TABLE Transactions (
     transaction_type VARCHAR(50) NOT NULL CHECK (transaction_type IN ('Transfer', 'Deposit', 'Withdrawal')),
     amount DECIMAL(10,2) NOT NULL CHECK (amount > 0),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
-    FOREIGN KEY (source_CardID) REFERENCES BankCard(CardID),
-    FOREIGN KEY (target_CardID) REFERENCES BankCard(CardID)
+    FOREIGN KEY (source_CardID) REFERENCES BankCard(CardID) ON DELETE SET NULL,
+    FOREIGN KEY (target_CardID) REFERENCES BankCard(CardID) ON DELETE SET NULL
 );

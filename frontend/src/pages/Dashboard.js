@@ -3,6 +3,7 @@ import { data, Form } from "react-router-dom";
 import Header from "./Header.js";
           
 const Dashboard = () => {
+  ////////////////////////////////////////////////////////////////////////////////////
   // For add card form
   const [showCardForm, setCardShowForm] = useState(false);
   const [cardDetails, setCardDetails] = useState({
@@ -18,7 +19,7 @@ const Dashboard = () => {
   const handleToggleForm = () => {
     setCardShowForm(!showCardForm);
   };
-  const handleFormSubmit = async(e) => {
+  const CreateCardFormSubmit = async(e) => {
     e.preventDefault();
     const url = "http://localhost:5000/bank/addcard";
     try {
@@ -45,6 +46,54 @@ const Dashboard = () => {
     }
  
   }
+  ////////////////////////////////////////////////////////////////////////////////////
+  // For remove a card
+  const [showDeleteCardForm, setDeleteForm] = useState(false);
+  const [deleteCardDetails, setDeleteCardDetails] = useState({
+    cardNumber: "",
+  });
+  const [isConfirmed, setIsConfirmed] = useState(false); // Checkbox
+
+  const toggleDeleteForm = () => {
+    setDeleteForm(!showDeleteCardForm)
+  }
+
+  const handleDeleteInputChange = (e) => {
+    const { name, value } = e.target;
+    setDeleteCardDetails({ ...deleteCardDetails, [name]: value });
+  };
+
+  const handleCheckboxChange = (e) => {
+    setIsConfirmed(e.target.checked);
+  };
+
+  const deleteCardFormSubmit = async(e) => {
+    e.preventDefault()
+    const url = "http://localhost:5000/bank/removecard"
+    try {
+      const response = await fetch(url, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,           
+        },
+        body: JSON.stringify(deleteCardDetails),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert(data.message);
+        setDeleteCardDetails({ cardNumber: ""});
+        setDeleteForm(false);
+        fetchCards();
+      } else {
+        alert(data.message)
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////
   // For displaying all the users cards - acc number and bal
   const [showAllCards, setAllCards] = useState(true);
   const [cards, setCards] = useState([])
@@ -75,6 +124,7 @@ const Dashboard = () => {
     fetchCards();
   }, []);
 
+  ////////////////////////////////////////////////////////////////////////////////////
   // For displaying all actions for the bank card - withdraw, deposit, transfer
   const [selectedCard, setSelectedCard] = useState(null);
   const [showCardActions, setShowCardActions] = useState(false);
@@ -82,7 +132,7 @@ const Dashboard = () => {
 
   const handleShowActions = (card) => {
     setSelectedCard(card);
-    setShowCardActions(true);
+    setShowCardActions(!showCardActions);
   };
   const handleActionSubmit = async(e, targetCardID) => {
     e.preventDefault();
@@ -118,9 +168,14 @@ const Dashboard = () => {
       console.error("Error: ", error)
     }
   };
+
+  ////////////////////////////////////////////////////////////////////////////////////
   return (
       <div>
-        <Header onToggleForm={handleToggleForm}/> 
+        <Header 
+          onToggleAddCardForm={handleToggleForm}
+          onToggleRemoveCardForm={toggleDeleteForm}
+        /> 
         {showAllCards && (
           <div class="table-container"> 
             <h2>Your cards</h2>
@@ -139,7 +194,6 @@ const Dashboard = () => {
                       <td>
                         <button onClick={() => handleShowActions(card)}>Actions</button>
                       </td>
-
                     </tr>
                   ))}
                 </tbody>
@@ -162,18 +216,18 @@ const Dashboard = () => {
                 Amount:
                 <input type="text" name="amount" pattern="\d+(\.\d{1,2})?" title="Please enter a valid decimal amount (e.g., 123.45)" required />
               </label>
-              <button type="submit">Submit</button>
               {selectedAction === "transfer" && (
                 <label> Target Card Number
                   <input type="text" name="transferCard" title="Please enter target card number" required />  
                 </label>
               )}
+              <button type="submit">Submit</button>
             </form>
           </div>
         )}
 
         {showCardForm && (
-          <form onSubmit={handleFormSubmit} class="card-form"> 
+          <form onSubmit={CreateCardFormSubmit} class="card-form"> 
             <h2>Add Card</h2>
             <div class="form-container">
               <label> Card Number:
@@ -188,7 +242,23 @@ const Dashboard = () => {
               <button> Submit </button>
             </div>
           </form>
-        )}            
+        )}    
+
+        {showDeleteCardForm && (
+          <form onSubmit={deleteCardFormSubmit} class="delete-form">
+            <h2> Delete Card </h2>
+            <div class="delete-container"> 
+              <label> Card Number: 
+                <input type="text" name="cardNumber" value={deleteCardDetails.cardNumber} onChange={handleDeleteInputChange} required></input>
+              </label>
+            </div>   
+            <div class="checkbox-container">
+              <label htmlFor="confirmCheckbox"> Confirm? </label>                  
+              <input type="checkbox" checked={isConfirmed} onChange={handleCheckboxChange} required id="confirmCheckBox"></input>
+            </div>  
+            <button type="submit" disabled={!isConfirmed}> Submit </button>
+          </form>
+        )}        
       </div>
 
     );

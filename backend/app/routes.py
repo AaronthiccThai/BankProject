@@ -160,7 +160,32 @@ def add_card():
     conn.close()
     return jsonify({"status": "success", "message": "Card added successfully!"}), 200
     
+
+@bank_routes.route('/bank/removecard', methods=['DELETE'])
+def remove_card():
+    user_id = get_user_id()
+    conn = get_db_connection()
+    cursor = conn.cursor()    
+    data = request.get_json()
+    card_id = data.get('cardNumber')
+    if not card_id:
+        return jsonify({"status": "error", "message": "No card or user supplied"}), 400
+
+    cursor.execute("Select balance from BankCard where CardID = %s", (card_id, ))
+    result = cursor.fetchone()   
+    if not result:
+        return jsonify({"status": "error", "message": "No card found"}), 400     
+    balance = result[0]
+    if balance != 0:
+        return jsonify({"status": "error", "message": "This account still has funds, cannot delete"}), 400
+    # Transfer the fund to another card 
+    cursor.execute("DELETE FROM BankCard WHERE CardID = %s", (card_id,))
     
+    conn.commit()
+    cursor.close()
+    conn.close()   
+    return jsonify({"status": "success", "message": "Successfully removed the card"}), 200
+
 @bank_routes.route('/bank/getcard', methods=['GET'])
 def get_cards():
     user_id = get_user_id()
@@ -169,7 +194,6 @@ def get_cards():
     
     cursor.execute("select b.CardID, b.balance from BankCard b where b.ownerID = %s", (user_id,))
     result = cursor.fetchall()
-    print(result)
     cards = [{"card_id": row[0], "balance": row[1]} for row in result]
     cursor.close()
     conn.close()
@@ -246,7 +270,7 @@ def transfer():
     
     new_source_bal = source_bal - amount
     
-    cursor.execute("SELECT balance from BankCard where ownerID = %s and cardID = %s", (user_id, target_card_id))
+    cursor.execute("SELECT balance from BankCard where cardID = %s", (target_card_id, ))
     target_bal = cursor.fetchone()
     if not target_bal:
         return jsonify({"status": "error", "message": "Bank card does not exist"}), 400
@@ -254,12 +278,36 @@ def transfer():
     
     new_target_bal = target_bal + amount
     
-    cursor.execute("UPDATE BankCard SET balance = %s WHERE ownerID = %s AND cardID = %s", (new_source_bal, user_id, source_card_id))
-    cursor.execute("UPDATE BankCard SET balance = %s WHERE ownerID = %s AND cardID = %s", (new_target_bal, user_id, target_card_id))
+    cursor.execute("UPDATE BankCard SET balance = %s WHERE cardID = %s", (new_source_bal, source_card_id))
+    cursor.execute("UPDATE BankCard SET balance = %s WHERE cardID = %s", (new_target_bal, target_card_id))
     
     cursor.execute("""INSERT INTO Transactions (source_CardID, target_CardID, transaction_type, amount)
-                   VALUES (%s, %s, 'Withdrawal', %s)""", (source_card_id, target_card_id, amount))        
+                   VALUES (%s, %s, 'Transfer', %s)""", (source_card_id, target_card_id, amount))        
     conn.commit()
     cursor.close()
     conn.close()
     return jsonify({"status": "success", "message": "Successfully transferred funds"}), 200
+
+
+@transaction_routes.route('/transaction/get_transactions', methods=['GET'])
+def get_transactions():
+    user_id = get_user_id()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""SELECT DISTINCT t.* 
+        FROM Transactions t
+        JOIN BankCard b ON t.source_CardID = b.CardID 
+        WHERE b.ownerID = %s
+        UNION 
+        SELECT DISTINCT t.* 
+        FROM Transactions t
+        JOIN BankCard b ON t.target_CardID = b.CardID 
+        WHERE b.ownerID = %s
+    """, (user_id, user_id ))
+    result = cursor.fetchall()
+    print(result)
+    transactions = [{"transaction": row[0], "source_card": row[1], "target_card": row[2], 
+                    "transaction_type": row[3], "amount": row[4], "time": row[5]} for row in result]    
+    cursor.close()
+    conn.close()
+    return jsonify({"status" : "success", "transactions": transactions}), 200    
