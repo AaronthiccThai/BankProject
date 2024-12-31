@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AuthForm = () => {
-  const [isLogin, setIsLogin] = useState(true); // Track whether the user is logging in or registering
+  const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
