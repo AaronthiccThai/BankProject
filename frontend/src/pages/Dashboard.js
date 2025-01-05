@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { data, Form } from "react-router-dom";
 import Header from "./Header.js";
-          
-const Dashboard = () => {
+import SideNav from "./SideNav.js";
+const Dashboard = ( {toggleSideNav }) => {
   ////////////////////////////////////////////////////////////////////////////////////
   // For add card form
   const [showCardForm, setCardShowForm] = useState(false);
@@ -170,12 +170,16 @@ const Dashboard = () => {
   };
 
   ////////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////////
   return (
       <div>
         <Header 
           onToggleAddCardForm={handleToggleForm}
           onToggleRemoveCardForm={toggleDeleteForm}
+          toggleSideNav={toggleSideNav}
         /> 
+ 
         {showAllCards && (
           <div class="table-container"> 
             <h2>Your cards</h2>
